@@ -205,7 +205,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(formattingEditProvider);
 	const completionItemProvider = isUsingLsp ? undefined : new DartCompletionItemProvider(analyzer);
 	const referenceProvider = isUsingLsp ? undefined : new DartReferenceProvider(analyzer);
-	const documentHighlightProvider = new DartDocumentHighlightProvider(analyzer);
+	const documentHighlightProvider = isUsingLsp ? undefined : new DartDocumentHighlightProvider(analyzer);
 	const sourceCodeActionProvider = new SourceCodeActionProvider();
 
 	const renameProvider = new DartRenameProvider(analyzer);
@@ -232,7 +232,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		context.subscriptions.push(vs.languages.registerDefinitionProvider(activeFileFilters, referenceProvider));
 		context.subscriptions.push(vs.languages.registerReferenceProvider(activeFileFilters, referenceProvider));
 	}
-	context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(activeFileFilters, documentHighlightProvider));
+	if (documentHighlightProvider)
+		context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(activeFileFilters, documentHighlightProvider));
 	if (!isUsingLsp) {
 		rankingCodeActionProvider.registerProvider(new AssistCodeActionProvider(activeFileFilters, analyzer));
 		rankingCodeActionProvider.registerProvider(new FixCodeActionProvider(activeFileFilters, analyzer));
