@@ -238,8 +238,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		rankingCodeActionProvider.registerProvider(new AssistCodeActionProvider(activeFileFilters, analyzer));
 		rankingCodeActionProvider.registerProvider(new FixCodeActionProvider(activeFileFilters, analyzer));
 		rankingCodeActionProvider.registerProvider(new RefactorCodeActionProvider(activeFileFilters, analyzer));
+		context.subscriptions.push(vs.languages.registerRenameProvider(activeFileFilters, renameProvider));
 	}
-	context.subscriptions.push(vs.languages.registerRenameProvider(activeFileFilters, renameProvider));
 
 	// Some actions only apply to Dart.
 	formattingEditProvider.registerTypingFormatter(DART_MODE, "}", ";");
