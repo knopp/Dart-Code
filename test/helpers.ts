@@ -8,6 +8,7 @@ import * as vs from "vscode";
 import { Context } from "../src/context";
 import { dartCodeExtensionIdentifier, flatMap, LogCategory, LogSeverity } from "../src/debug/utils";
 import { InternalExtensionApi } from "../src/extension";
+import { lspReady } from "../src/lsp/setup";
 import { DelayedCompletionItem } from "../src/providers/dart_completion_item_provider";
 import { internalApiSymbol } from "../src/symbols";
 import { fsPath, isAnalyzable, vsCodeVersionConstraint } from "../src/utils";
@@ -122,6 +123,7 @@ export async function activateWithoutAnalysis(): Promise<void> {
 		extApi = ext.exports[internalApiSymbol];
 	else
 		console.warn("Extension has no exports, it probably has not activated correctly! Check the extension startup logs.");
+	await lspReady();
 }
 
 export async function activate(file?: vs.Uri | null | undefined): Promise<void> {
