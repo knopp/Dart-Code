@@ -90,6 +90,8 @@ class Config {
 	public setSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
 	public setWarnWhenEditingFilesOutsideWorkspace(value: boolean): Thenable<void> { return this.setConfig("warnWhenEditingFilesOutsideWorkspace", value, ConfigurationTarget.Global); }
 
+	get previewFlutterOutline() { return this.getConfig<boolean>("previewFlutterOutline", false); }
+
 	public for(uri?: Uri): ResourceConfig {
 		return new ResourceConfig(uri);
 	}
