@@ -37,7 +37,8 @@ import { FlutterCapabilities } from "./flutter/capabilities";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { DaemonCapabilities, FlutterDaemon } from "./flutter/flutter_daemon";
 import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
-import { initLSP } from "./lsp/setup";
+import { LspAnalyzerStatusReporter } from "./lsp/analyzer_status_reporter";
+import { initLSP, lspClient } from "./lsp/setup";
 import { getWorkspaceProjectFolders } from "./project";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
@@ -267,7 +268,9 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/flutter.json", (uri) => util.isInsideFlutterProject(uri) || util.isInsideFlutterWebProject(uri))));
 
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE.language, new DartLanguageConfiguration()));
-	const statusReporter = new AnalyzerStatusReporter(analyzer, workspaceContext, analytics);
+	const statusReporter = isUsingLsp
+		? new LspAnalyzerStatusReporter(lspClient)
+		: new AnalyzerStatusReporter(analyzer, workspaceContext, analytics);
 
 	// Set up diagnostics.
 	if (!isUsingLsp) {
