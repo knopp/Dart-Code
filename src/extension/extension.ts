@@ -39,6 +39,7 @@ import { DaemonCapabilities, FlutterDaemon } from "./flutter/flutter_daemon";
 import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
 import { LspAnalyzerStatusReporter } from "./lsp/analyzer_status_reporter";
 import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
+import { LspGoToSuperCommand } from "./lsp/go_to_super";
 import { initLSP, lspClient } from "./lsp/setup";
 import { getWorkspaceProjectFolders } from "./project";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
@@ -391,7 +392,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Register misc commands.
 	context.subscriptions.push(new TypeHierarchyCommand(analyzer));
-	context.subscriptions.push(new GoToSuperCommand(analyzer));
+	context.subscriptions.push(isUsingLsp ? new LspGoToSuperCommand(lspClient) : new GoToSuperCommand(analyzer));
 	context.subscriptions.push(new LoggingCommands(context.logPath));
 	context.subscriptions.push(new OpenInOtherEditorCommands(sdks));
 	context.subscriptions.push(new TestCommands());
