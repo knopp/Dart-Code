@@ -64,6 +64,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	pubSnapshotPath: string;
 	pubTestLogFile: string;
 	showMemoryUsage: boolean;
+	sdkPath: string;
 }
 
 export interface FlutterLaunchRequestArguments extends DartLaunchRequestArguments {

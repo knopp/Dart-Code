@@ -65,6 +65,8 @@ export class DartDebugSession extends DebugSession {
 	protected logCategory = LogCategory.General; // This isn't used as General, since both Flutter and FlutterWeb override it.
 	// protected observatoryUriIsProbablyReconnectable = false;
 
+	protected sdkPath: string;
+
 	protected get shouldConnectDebugger() {
 		return !this.noDebug || this.connectVmEvenForNoDebug;
 	}
@@ -116,6 +118,7 @@ export class DartDebugSession extends DebugSession {
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
 		this.logFile = args.observatoryLogFile;
 		this.maxLogLineLength = args.maxLogLineLength;
+		this.sdkPath = args.sdkPath;
 
 		this.sendResponse(response);
 
@@ -279,7 +282,7 @@ export class DartDebugSession extends DebugSession {
 
 		return new Promise<void>((resolve, reject) => {
 			this.log(`Connecting to VM Service at ${uri}`);
-			this.observatory = new ObservatoryConnection(uri);
+			this.observatory = new ObservatoryConnection(uri, this.sdkPath);
 			this.observatory.onLogging((message) => this.log(message));
 			this.observatory.onOpen(() => {
 				if (!this.observatory)
@@ -567,6 +570,34 @@ export class DartDebugSession extends DebugSession {
 		this.sendResponse(response);
 	}
 
+	// Bit of guess work here
+	private guessDartSourcePath(uri: string) {
+		if (uri.startsWith("dart:")) {
+			const p = path.join(this.sdkPath, "lib", uri.substr(5));
+			if (!fs.existsSync(p)) { // if the file doesn't exist at all, give up
+				return undefined;
+			}
+			// dart:_http => dart:_http/_http.dart => dart:_http/http.dart
+			const stat = fs.statSync(p);
+			if (stat.isDirectory()) {
+				const name = path.basename(p);
+				const p1 = path.join(p, name + ".dart");
+				if (fs.existsSync(p1)) {
+					return p1;
+				} else if (name.startsWith("_")) {
+					const p2 = path.join(p, name.substr(1) + ".dart");
+					if (fs.existsSync(p2))
+						return p2;
+				} else {
+					return undefined;
+				}
+			}
+			return p;
+		} else {
+			return uri;
+		}
+	}
+
 	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
 		const thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
 		let startFrame: number = args.startFrame;
@@ -629,8 +660,10 @@ export class DartDebugSession extends DebugSession {
 				// Download the source if from a "dart:" uri.
 				let sourceReference: number | undefined;
 				if (uri.startsWith("dart:")) {
-					sourcePath = undefined;
-					sourceReference = thread.storeData(location.script);
+					sourcePath = this.guessDartSourcePath(uri);
+					if (sourcePath === undefined) {
+						sourceReference = thread.storeData(location.script);
+					}
 					canShowSource = true;
 				}
 
@@ -641,6 +674,7 @@ export class DartDebugSession extends DebugSession {
 					canShowSource ? new Source(shortName, sourcePath, sourceReference, undefined, location.script) : undefined,
 					0, 0,
 				);
+
 				// The top frame is only allowed to be deemphasized when it's an exception (so the editor walks
 				// up the stack to user code). If the reson for stopping was a breakpoint, step, etc., then we
 				// should always leave the frame focusable.

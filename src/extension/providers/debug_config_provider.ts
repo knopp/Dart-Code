@@ -475,6 +475,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					? debugConfig.showMemoryUsage
 					: debugConfig.flutterMode === "profile";
 		}
+		debugConfig.sdkPath = this.sdks.dartSdkIsFromFlutter ? (this.sdks.flutter || this.sdks.dart) : this.sdks.dart;
 	}
 
 	public dispose() {

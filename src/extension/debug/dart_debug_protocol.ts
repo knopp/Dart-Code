@@ -351,10 +351,12 @@ export class ObservatoryConnection {
 	private completers: { [key: string]: PromiseCompleter<DebuggerResult> } = {};
 	private logging?: (message: string) => void;
 	private eventListeners: { [key: string]: (message: VMEvent) => void } = {};
+	private sdkPath: string;
 
-	constructor(uri: string) {
+	constructor(uri: string, sdkPath: string) {
 		this.socket = new WebSocket(uri);
 		this.socket.on("message", (data) => this.handleData(data.toString()));
+		this.sdkPath = sdkPath;
 	}
 
 	public onOpen(cb: () => void) {
@@ -394,6 +396,11 @@ export class ObservatoryConnection {
 			line: number,
 			column?: number,
 		};
+
+		const sdkUri = "file://" + this.sdkPath;
+		if (scriptUri.startsWith(sdkUri)) {
+			scriptUri = "org-dartlang-sdk:///sdk" + scriptUri.substr(sdkUri.length);
+		}
 		data = { isolateId, scriptUri, line };
 		if (column)
 			data.column = column;
